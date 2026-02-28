@@ -1,0 +1,16 @@
+use std::output::{ write_line, write, StdErr }
+use std::number::all
+use super::vec3::Vec3
+
+
+pub type Color = Vec3
+
+pub fn write_color(color: Color)
+  let ir = to_pixel(color.x).to_string()
+  let ig = to_pixel(color.y).to_string()
+  let ib = to_pixel(color.z).to_string()
+
+  write_line("${ir} ${ig} ${ib}")
+
+fn to_pixel(color: f64) -> i32
+  (255.999 * color).to_i32_checked().unwrap_or(0)

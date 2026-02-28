@@ -1,5 +1,7 @@
 use std::output::{ write_line, write, StdErr }
 use std::number::all
+use self::color::{ write_color }
+use self::vec3::Vec3
 
 pub fn draw()
   let image_width = 256
@@ -10,26 +12,7 @@ pub fn draw()
   for i in 0..image_height:
     write("\rScanlines remaining: ${(image_height - i).to_string()}", StdErr {})
     for j in 0..image_width:
-      let r = j.to_f64() / (image_width - 1).to_f64()
-      let g = i.to_f64() / (image_height - 1).to_f64()
-      let b = 0.0
-
-      let ir = match((255.999 * r).to_i32_checked())
-        Ok { value }:
-          value
-        Err:
-          0
-      let ig = match((255.999 * g).to_i32_checked())
-        Ok { value }:
-          value
-        Err:
-          0
-      let ib = match((255.999 * b).to_i32_checked())
-        Ok { value }:
-          value
-        Err:
-          0
-
-      write_line("${ir.to_string()} ${ig.to_string()} ${ib.to_string()}")
+      let color = Vec3(j.to_f64() / (image_width - 1).to_f64(), i.to_f64() / (image_height - 1).to_f64(), 0.0)
+      write_color(color)
 
   void

@@ -1,0 +1,74 @@
+use std::math::all
+
+pub obj Vec3 {
+  x: f64,
+  y: f64,
+  z: f64
+}
+
+impl Vec3
+  fn init(x: f64, y: f64, z: f64) -> Vec3
+    Vec3 { x, y, z }
+
+  fn '+='(~self, other: Vec3) -> Vec3
+    self.x = self.x + other.x
+    self.y = self.y + other.y
+    self.z = self.z + other.z
+    self
+
+  fn '*='(~self, other: Vec3) -> Vec3
+    self.x = self.x * other.x
+    self.y = self.y * other.y
+    self.z = self.z * other.z
+    self
+
+  fn '/='(~self, other: Vec3) -> Vec3
+    self.x = self.x / other.x
+    self.y = self.y / other.y
+    self.z = self.z / other.z
+    self
+
+  fn '+'(self, other: Vec3) -> Vec3
+    Vec3 { x: self.x + other.x, y: self.y + other.y, z: self.z + other.z }
+
+  fn '-'(self, other: Vec3) -> Vec3
+    Vec3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
+
+  fn '*'(self, other: Vec3) -> Vec3
+    Vec3 { x: self.x * other.x, y: self.y * other.y, z: self.z * other.z }
+
+  fn '*'(self, scalar: f64) -> Vec3
+    Vec3 { x: self.x * scalar, y: self.y * scalar, z: self.z * scalar }
+
+  fn '/'(self, other: Vec3) -> Vec3
+    Vec3 { x: self.x / other.x, y: self.y / other.y, z: self.z / other.z }
+
+  fn '/'(self, scalar: f64) -> Vec3
+    Vec3 { x: self.x / scalar, y: self.y / scalar, z: self.z / scalar }
+
+  fn cross(self, other: Vec3) -> Vec3
+    Vec3 {
+      x: self.y * other.z - self.z * other.y,
+      y: self.z * other.x - self.x * other.z,
+      z: self.x * other.y - self.y * other.x
+    }
+
+  fn dot(self, other: Vec3) -> f64
+    self.x * other.x + self.y * other.y + self.z * other.z
+
+  fn len(self) -> f64
+    (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
+
+  fn len_squared(self) -> f64
+    self.x * self.x + self.y * self.y + self.z * self.z
+
+  fn unit_vector(self) -> Vec3
+    self / self.len()
+
+pub type Point3 = Vec3
+
+pub fn '*'(scalar: f64, vec: Vec3) -> Vec3
+  vec * scalar
+
+pub fn '/'(scalar: f64, vec: Vec3) -> Vec3
+  vec / scalar
