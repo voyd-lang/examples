@@ -14,22 +14,22 @@ pub fn draw()
       let g = i.to_f64() / (image_height - 1).to_f64()
       let b = 0.0
 
-      let ir = (255.999 * r)
-        .to_i32_checked()
-        .match(r)
-          Ok { value }: value
-          else: 0
-        .to_string()
-      let ig = (255.999 * g)
-        .to_i32_checked()
-        .match(r)
-          Ok { value }: value
-          Err: 0
-        .to_string()
-      let ib = (255.999 * b).to_i32_checked()
-        .match(r)
-          Ok { value }: value
-          Err: 0
-        .to_string()
+      let ir = match((255.999 * r).to_i32_checked())
+        Ok { value }:
+          value
+        Err:
+          0
+      let ig = match((255.999 * g).to_i32_checked())
+        Ok { value }:
+          value
+        Err:
+          0
+      let ib = match((255.999 * b).to_i32_checked())
+        Ok { value }:
+          value
+        Err:
+          0
 
-      write_line("${ir} ${ig} ${ib}\n")
+      write_line("${ir.to_string()} ${ig.to_string()} ${ib.to_string()}")
+
+  void
