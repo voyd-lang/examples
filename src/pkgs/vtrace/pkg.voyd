@@ -1,20 +1,35 @@
-use std::output::{ write_line, StdErr }
+use std::output::{ write_line, write, StdErr }
+use std::number::all
 
 pub fn draw()
   let image_width = 256
   let image_height = 256
 
-  write_line("P3\n${image_width} {image_height}\n255\n")
+  write_line("P3\n${image_width.to_string()} ${image_height.to_string()}\n255\n")
 
-  for i in 0..image_height
-    write_line("\rScanlines remaining: ${image_height - i}", StdErr {})
-    for j in 0..image_width
+  for i in 0..image_height:
+    write("\rScanlines remaining: ${(image_height - i).to_string()}", StdErr {})
+    for j in 0..image_width:
       let r = j.to_f64() / (image_width - 1).to_f64()
       let g = i.to_f64() / (image_height - 1).to_f64()
       let b = 0.0
 
-      let ir = (255.999 * r).to_i32()
-      let ig = (255.999 * g).to_i32()
-      let ib = (255.999 * b).to_i32()
+      let ir = (255.999 * r)
+        .to_i32_checked()
+        .match(r)
+          Ok { value }: value
+          else: 0
+        .to_string()
+      let ig = (255.999 * g)
+        .to_i32_checked()
+        .match(r)
+          Ok { value }: value
+          Err: 0
+        .to_string()
+      let ib = (255.999 * b).to_i32_checked()
+        .match(r)
+          Ok { value }: value
+          Err: 0
+        .to_string()
 
       write_line("${ir} ${ig} ${ib}\n")
