@@ -1,0 +1,10 @@
+use super::vec3::Vec3
+
+pub obj Ray {
+  origin: Vec3,
+  direction: Vec3
+}
+
+impl Ray
+  fn at(self, t: f64) -> Vec3
+    self.origin + self.direction * t

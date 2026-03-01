@@ -65,6 +65,9 @@ impl Vec3
   fn unit_vector(self) -> Vec3
     self / self.len()
 
+  fn copy(self) -> Vec3
+    Vec3 { x: self.x, y: self.y, z: self.z }
+
 pub type Point3 = Vec3
 
 pub fn '*'(scalar: f64, vec: Vec3) -> Vec3
