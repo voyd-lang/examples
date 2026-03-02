@@ -1,0 +1,28 @@
+use std::math::{ INFINITY, NEG_INFINITY }
+
+pub obj Interval {
+  min: f64,
+  max: f64
+}
+
+impl Interval
+  fn init()
+    Interval { min: INFINITY, max: NEG_INFINITY }
+
+  fn init(min: f64, max: f64)
+    Interval { min, max }
+
+  fn empty()
+    Interval(INFINITY, NEG_INFINITY)
+
+  fn universe()
+    Interval(NEG_INFINITY, INFINITY)
+
+  fn size(self)
+    self.max - self.min
+
+  fn contains(self, x: f64)
+    self.min <= x and x <= self.max
+
+  fn surrounds(self, x: f64)
+    self.min < x and x < self.max

@@ -1,0 +1,72 @@
+use super::vec3::all
+use super::ray::Ray
+use src::pkgs::vtrace::interval::Interval
+
+
+pub obj HitRecord {
+  p: Point3,
+  normal: Vec3,
+  t: f64,
+  front_face: bool
+}
+
+impl HitRecord
+  fn init()
+    HitRecord {
+      p: Point3(0.0, 0.0, 0.0),
+      normal: Vec3(0.0, 0.0, 0.0),
+      t: 0.0,
+      front_face: false
+    }
+
+  fn apply(~self, rec: HitRecord)
+    self.p = rec.p
+    self.normal = rec.normal
+    self.t = rec.t
+    self.front_face = rec.front_face
+    self
+
+  fn copy(self)
+    HitRecord { ...self }
+
+  fn set_face_normal(~self, ray: Ray, outward_normal: Vec3)
+    self.front_face = dot(ray.direction, outward_normal) < 0.0
+    self.normal =
+      if self.front_face then: outward_normal else: outward_normal * -1.0
+
+
+pub trait Hittable
+  fn hit(self, { ray: Ray, ray_t: Interval, ~rec: HitRecord }) -> bool
+
+pub obj HittableList {
+  pri objects: Array<Hittable>
+}
+
+impl HittableList
+  fn init()
+    HittableList { objects: Array<Hittable>() }
+
+  fn add(~self, object: Hittable)
+    self.objects.push(object)
+    self
+
+  fn added(self, object: Hittable)
+    HittableList { objects: self.objects.pushed(object) }
+
+impl Hittable for HittableList
+  fn hit(self, { ray: Ray, ray_t: Interval, ~rec: HitRecord }) -> bool
+    var ~temp_rec = HitRecord()
+    var hit_anything = false
+    var closest_so_far = ray_t.max
+
+    for object in self.objects:
+      if object.hit({
+        ray,
+        ray_t: Interval(ray_t.min, closest_so_far),
+        rec: temp_rec
+      }):
+        hit_anything = true
+        closest_so_far = temp_rec.t
+        rec.apply(temp_rec)
+
+    hit_anything

@@ -3,18 +3,27 @@ use std::number::all
 use self::color::{ write_color, Color }
 use self::vec3::all
 use self::ray::Ray
+use self::hit::{ Hittable, HitRecord, HittableList }
+use self::utils::{ INFINITY }
+use self::interval::Interval
+use src::pkgs::vtrace::sphere::Sphere
 
 fn hit_sphere(center: Point3, radius: f64, r: Ray)
   let oc = center - r.origin
-  let a = r.direction.dot(r.direction)
-  let b = -2.0 * r.direction.dot(oc)
-  let c = oc.dot(oc) - radius * radius
-  let discriminant = b * b - 4.0 * a * c
-  discriminant >= 0.0
+  let a = r.direction.len_squared()
+  let h = r.direction.dot(oc)
+  let c = oc.len_squared() - radius * radius
+  let discriminant = h * h - a * c
 
-fn ray_color(ray: Ray) -> Vec3
-  if hit_sphere(Point3(0.0, 0.0, -1.0), 0.5, ray):
-    return Color(1.0, 0.0, 0.0)
+  if discriminant < 0.0:
+    -1.0
+  else:
+    (h - math::sqrt(discriminant)) / a
+
+fn ray_color(ray: Ray, world: Hittable) -> Color
+  let ~rec = HitRecord()
+  if world.hit({ ray, ray_t: Interval(0.0, INFINITY), rec }):
+    return 0.5 * (rec.normal + Color(1.0, 1.0, 1.0))
 
   let unit_direction = ray.direction.unit_vector()
   let a = 0.5 * (unit_direction.y + 1.0)
@@ -30,6 +39,10 @@ pub fn draw()
   let image_height = (image_width.to_f64() / aspect_ratio)
     .to_i32_checked()
     .unwrap_or(0)
+
+  let world = HittableList()
+    .added(Sphere(Point3(0.0, 0.0, -1.0), 0.5))
+    .added(Sphere(Point3(0.0, -100.5, -1.0), 100.0))
 
   // Camera
   let focal_length = 1.0
@@ -61,7 +74,7 @@ pub fn draw()
       let pixel_center = pixel00_loc + (i.to_f64() * pixel_delta_u) + (j.to_f64() * pixel_delta_v)
       let ray_direction = pixel_center - camera_center
       let r = Ray { origin: camera_center, direction: ray_direction }
-      let color = ray_color(r)
+      let color = ray_color(r, world)
 
       write_color(color)
 

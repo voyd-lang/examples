@@ -1,0 +1,3 @@
+
+pub let INFINITY = 1.0 / 0.0
+pub let PI = 3.1415926535897932385
