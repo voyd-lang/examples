@@ -1,0 +1,81 @@
+use super::ray::Ray
+use src::pkgs::vtrace::hit::{ Hittable, HitRecord, HittableList }
+use src::pkgs::vtrace::color::{ Color, write_color }
+use std::math::{ INFINITY, max }
+use std::number::{ to_f64, to_i32_checked, to_string }
+use std::output::{ StdErr, write_line, write }
+use super::interval::Interval
+use super::vec3::all
+
+pub obj Camera {
+  aspect_ratio: f64,
+  image_width: i32,
+  pri center: Point3,
+  pri image_height: i32,
+  pri pixel00_loc: Point3,
+  pri pixel_delta_u: Vec3,
+  pri pixel_delta_v: Vec3
+}
+
+impl Camera
+  fn init({ aspect_ratio: f64, image_width: i32 })
+    let image_height = (image_width.to_f64() / aspect_ratio)
+      .to_i32_checked()
+      .unwrap_or(0)
+      .max(1)
+    let center = Point3(0.0, 0.0, 0.0)
+
+    // Determine viewport dimensions
+    let focal_length = 1.0
+    let viewport_height = 2.0
+    let viewport_width = viewport_height * (image_width.to_f64() / image_height.to_f64())
+
+    // Calculate the vectors across the horizontal and down the vertical viewport edges.
+    let viewport_u = Vec3(viewport_width, 0.0, 0.0)
+    let viewport_v = Vec3(0.0, -viewport_height, 0.0)
+
+    // Calculate the horizontal and vertical delta vectors from pixel to pixel.
+    let pixel_delta_u = viewport_u / image_width.to_f64()
+    let pixel_delta_v = viewport_v / image_height.to_f64()
+
+    // Calculate the location of the upper left pixel.
+    let viewport_upper_left = center
+      - Vec3(0.0, 0.0, focal_length)
+      - viewport_u / 2.0
+      - viewport_v / 2.0
+
+    let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v)
+    Camera {
+      center,
+      aspect_ratio,
+      image_width,
+      image_height,
+      pixel00_loc,
+      pixel_delta_u,
+      pixel_delta_v
+    }
+
+  pub fn render(self, world: Hittable)
+    write_line("P3\n${self.image_width.to_string()} ${self.image_height.to_string()}\n255\n")
+
+    for j in 0..self.image_height:
+      write("\rScanlines remaining: ${(self.image_height - j).to_string()}", StdErr {})
+      for i in 0..self.image_width:
+        let pixel_center = self.pixel00_loc + (i.to_f64() * self.pixel_delta_u) + (j.to_f64() * self.pixel_delta_v)
+        let ray_direction = pixel_center - self.center
+        let r = Ray { origin: self.center, direction: ray_direction }
+        let color = ray_color(r, world)
+
+        write_color(color)
+
+    void
+
+fn ray_color(ray: Ray, world: Hittable) -> Color
+  let ~rec = HitRecord()
+
+  if world.hit({ rec, ray_t: Interval(0.0, INFINITY), ray }):
+    return 0.5 * (rec.normal + Color(1.0, 1.0, 1.0))
+
+  let unit_direction = ray.direction.unit_vector()
+  let a = 0.5 * (unit_direction.y + 1.0)
+  (1.0 - a) * Color(1.0, 1.0, 1.0) + a * Color(0.5, 0.7, 1.0)
