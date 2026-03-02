@@ -3,7 +3,7 @@ use self::vec3::all
 use self::sphere::Sphere
 use self::camera::Camera
 use std::output::Output
-use std::random::Random
+use std::random::{ LocalRng, Random }
 
 pub fn draw(): (Output, Random) -> void
   // Image
@@ -13,6 +13,7 @@ pub fn draw(): (Output, Random) -> void
   let world = HittableList()
     .added(Sphere(center: Point3(0.0, 0.0, -1.0), radius: 0.5))
     .added(Sphere(center: Point3(0.0, -100.5, -1.0), radius: 100.0))
+  let ~rng = LocalRng::seeded_from_host()
 
-  Camera({ aspect_ratio, image_width, samples_per_pixel: 10 })
-    .render(world)
+  Camera({ aspect_ratio, image_width, samples_per_pixel: 100 })
+    .render(world, rng)

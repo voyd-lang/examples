@@ -1,10 +1,11 @@
 use super::ray::Ray
-use src::pkgs::vtrace::hit::{ Hittable, HitRecord, HittableList }
-use src::pkgs::vtrace::color::{ Color, write_color }
+use super::hit::{ Hittable, HitRecord, HittableList }
+use super::color::{ Color, append_color_line_bytes }
 use std::math::{ INFINITY, max }
 use std::number::{ to_f64, to_i32_checked, to_string }
 use std::output::{ StdErr, write_line, write }
-use std::random::random_f64
+use std::random::LocalRng
+use std::string::type::{ new_string }
 use std::optional::fns::{ '??' }
 use super::interval::Interval
 use super::vec3::all
@@ -63,32 +64,37 @@ impl Camera
       pixel_delta_v
     }
 
-  pub fn render(self, world: Hittable)
+  pub fn render(self, world: Hittable, ~rng: LocalRng)
     write_line("P3\n${self.image_width.to_string()} ${self.image_height.to_string()}\n255\n")
 
     for j in 0..self.image_height:
       write("\rScanlines remaining: ${(self.image_height - j).to_string()}", StdErr {})
+      let j_f = j.to_f64()
+      let ~scanline = Array<i32>::with_capacity(self.image_width * 16)
       for i in 0..self.image_width:
+        let i_f = i.to_f64()
         let ~color = Color(1.0, 1.0, 1.0)
         for sample in 0..self.samples_per_pixel:
-          let r = self.get_ray(i, j)
+          let r = self.get_ray(i_f, j_f, rng)
           color += ray_color(r, world)
 
-        write_color(self.pixel_samples_scale * color)
+        append_color_line_bytes(scanline, self.pixel_samples_scale * color)
+
+      write(new_string(scanline.to_fixed_array()))
 
     void
 
-  fn get_ray(self, i: i32, j: i32)
-    let offset = sample_square()
+  fn get_ray(self, i: f64, j: f64, ~rng: LocalRng)
+    let offset = sample_square(rng)
     let pixel_sample = self.pixel00_loc
-      + (self.pixel_delta_u * (i.to_f64() + offset.x))
-      + (self.pixel_delta_v * (j.to_f64() + offset.y))
+      + (self.pixel_delta_u * (i + offset.x))
+      + (self.pixel_delta_v * (j + offset.y))
     let ray_origin = self.center
     let ray_direction = pixel_sample - ray_origin
     Ray { origin: ray_origin, direction: ray_direction }
 
-fn sample_square()
-  Vec3(random_f64(-0.5..0.5), random_f64(-0.5..0.5), random_f64(-0.5..0.5))
+fn sample_square(~rng: LocalRng)
+  Vec3(rng.random_f64(-0.5..0.5), rng.random_f64(-0.5..0.5), 0.0)
 
 fn ray_color(ray: Ray, world: Hittable) -> Color
   let ~rec = HitRecord()

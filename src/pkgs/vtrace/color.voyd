@@ -1,18 +1,33 @@
 use std::output::{ write_line, write, StdErr }
 use std::number::all
+use std::string::type::{ String, new_string }
 use super::vec3::Vec3
-use src::pkgs::vtrace::interval::Interval
+use super::interval::Interval
 
 
 pub type Color = Vec3
 
 pub fn write_color(color: Color)
-  let ir = to_pixel(color.x).to_string()
-  let ig = to_pixel(color.y).to_string()
-  let ib = to_pixel(color.z).to_string()
+  let ~line = Array<i32>::with_capacity(16)
+  append_color_line_bytes(line, color)
+  write_line(to_line_string(line).as_slice())
 
-  write_line("${ir} ${ig} ${ib}")
+pub fn append_color_line_bytes(~out: Array<i32>, color: Color)
+  append_i32_ascii(out, to_pixel(color.x))
+  out.push(32)
+  append_i32_ascii(out, to_pixel(color.y))
+  out.push(32)
+  append_i32_ascii(out, to_pixel(color.z))
+  out.push(10)
 
 let intensity = Interval(0.0, 0.999)
 fn to_pixel(color: f64) -> i32
   (256.0 * intensity.clamp(color)).to_i32_checked().unwrap_or(0)
+
+fn append_i32_ascii(~out: Array<i32>, value: i32)
+  let bytes = value.to_string().to_utf8()
+  for byte in bytes:
+    out.push(byte)
+
+fn to_line_string(bytes: Array<i32>) -> String
+  new_string(bytes.to_fixed_array())
