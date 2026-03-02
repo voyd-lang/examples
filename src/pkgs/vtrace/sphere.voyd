@@ -12,6 +12,9 @@ impl Sphere
   fn init(center: Point3, radius: f64)
     Sphere { center, radius: math::max(0.0, radius) }
 
+  fn init({ center: Point3, radius: f64 })
+    Sphere { center, radius }
+
 impl Hittable for Sphere
   fn hit(self, { ray: Ray, ray_t: Interval, ~rec: HitRecord }) -> bool
     let oc = self.center - ray.origin

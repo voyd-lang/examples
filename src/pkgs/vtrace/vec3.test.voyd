@@ -1,0 +1,30 @@
+use std::test::assertions::all
+
+test "vec3 component arithmetic":
+  let a = Vec3(1.0, 2.0, 3.0)
+  let b = Vec3(4.0, 5.0, 6.0)
+
+  let sum = a + b
+  assert(sum.x, eq: 5.0)
+  assert(sum.y, eq: 7.0)
+  assert(sum.z, eq: 9.0)
+
+  let scaled = a * 2.0
+  assert(scaled.x, eq: 2.0)
+  assert(scaled.y, eq: 4.0)
+  assert(scaled.z, eq: 6.0)
+
+test "vec3 dot and cross":
+  let x_axis = Vec3(1.0, 0.0, 0.0)
+  let y_axis = Vec3(0.0, 1.0, 0.0)
+
+  let cross = x_axis.cross(y_axis)
+  assert(cross.x, eq: 0.0)
+  assert(cross.y, eq: 0.0)
+  assert(cross.z, eq: 1.0)
+  assert(x_axis.dot(y_axis), eq: 0.0)
+
+test "vec3 length helpers":
+  let v = Vec3(3.0, 4.0, 0.0)
+  assert(v.len_squared(), eq: 25.0)
+  assert(v.len(), eq: 5.0)

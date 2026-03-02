@@ -12,6 +12,13 @@ impl Interval
   fn init(min: f64, max: f64)
     Interval { min, max }
 
+  fn clamp(self, x: f64)
+    if
+      x < self.min: self.min
+      x > self.max: self.max
+      else: x
+
+
   fn empty()
     Interval(INFINITY, NEG_INFINITY)
 

@@ -1,6 +1,7 @@
 use std::output::{ write_line, write, StdErr }
 use std::number::all
 use super::vec3::Vec3
+use src::pkgs::vtrace::interval::Interval
 
 
 pub type Color = Vec3
@@ -12,5 +13,6 @@ pub fn write_color(color: Color)
 
   write_line("${ir} ${ig} ${ib}")
 
+let intensity = Interval(0.0, 0.999)
 fn to_pixel(color: f64) -> i32
-  (255.999 * color).to_i32_checked().unwrap_or(0)
+  (256.0 * intensity.clamp(color)).to_i32_checked().unwrap_or(0)

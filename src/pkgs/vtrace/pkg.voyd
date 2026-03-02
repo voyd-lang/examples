@@ -2,15 +2,17 @@ use self::hit::HittableList
 use self::vec3::all
 use self::sphere::Sphere
 use self::camera::Camera
+use std::output::Output
+use std::random::Random
 
-pub fn draw()
+pub fn draw(): (Output, Random) -> void
   // Image
   let aspect_ratio = 16.0 / 9.0
   let image_width = 400
 
   let world = HittableList()
-    .added(Sphere(Point3(0.0, 0.0, -1.0), 0.5))
-    .added(Sphere(Point3(0.0, -100.5, -1.0), 100.0))
+    .added(Sphere(center: Point3(0.0, 0.0, -1.0), radius: 0.5))
+    .added(Sphere(center: Point3(0.0, -100.5, -1.0), radius: 100.0))
 
-  Camera({ aspect_ratio, image_width })
+  Camera({ aspect_ratio, image_width, samples_per_pixel: 10 })
     .render(world)

@@ -4,21 +4,25 @@ use src::pkgs::vtrace::color::{ Color, write_color }
 use std::math::{ INFINITY, max }
 use std::number::{ to_f64, to_i32_checked, to_string }
 use std::output::{ StdErr, write_line, write }
+use std::random::random_f64
+use std::optional::fns::{ '??' }
 use super::interval::Interval
 use super::vec3::all
 
 pub obj Camera {
   aspect_ratio: f64,
   image_width: i32,
+  samples_per_pixel: i32,
   pri center: Point3,
   pri image_height: i32,
+  pri pixel_samples_scale: f64,
   pri pixel00_loc: Point3,
   pri pixel_delta_u: Vec3,
   pri pixel_delta_v: Vec3
 }
 
 impl Camera
-  fn init({ aspect_ratio: f64, image_width: i32 })
+  fn init({ aspect_ratio: f64, image_width: i32, samples_per_pixel?: i32 })
     let image_height = (image_width.to_f64() / aspect_ratio)
       .to_i32_checked()
       .unwrap_or(0)
@@ -45,8 +49,12 @@ impl Camera
       - viewport_v / 2.0
 
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v)
+    let spp = samples_per_pixel ?? 10
+
     Camera {
       center,
+      samples_per_pixel: spp,
+      pixel_samples_scale: 1.0 / spp.to_f64(),
       aspect_ratio,
       image_width,
       image_height,
@@ -61,14 +69,26 @@ impl Camera
     for j in 0..self.image_height:
       write("\rScanlines remaining: ${(self.image_height - j).to_string()}", StdErr {})
       for i in 0..self.image_width:
-        let pixel_center = self.pixel00_loc + (i.to_f64() * self.pixel_delta_u) + (j.to_f64() * self.pixel_delta_v)
-        let ray_direction = pixel_center - self.center
-        let r = Ray { origin: self.center, direction: ray_direction }
-        let color = ray_color(r, world)
+        let ~color = Color(1.0, 1.0, 1.0)
+        for sample in 0..self.samples_per_pixel:
+          let r = self.get_ray(i, j)
+          color += ray_color(r, world)
 
-        write_color(color)
+        write_color(self.pixel_samples_scale * color)
 
     void
+
+  fn get_ray(self, i: i32, j: i32)
+    let offset = sample_square()
+    let pixel_sample = self.pixel00_loc
+      + (self.pixel_delta_u * (i.to_f64() + offset.x))
+      + (self.pixel_delta_v * (j.to_f64() + offset.y))
+    let ray_origin = self.center
+    let ray_direction = pixel_sample - ray_origin
+    Ray { origin: ray_origin, direction: ray_direction }
+
+fn sample_square()
+  Vec3(random_f64(-0.5..0.5), random_f64(-0.5..0.5), random_f64(-0.5..0.5))
 
 fn ray_color(ray: Ray, world: Hittable) -> Color
   let ~rec = HitRecord()
