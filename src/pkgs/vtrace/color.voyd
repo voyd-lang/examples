@@ -22,7 +22,9 @@ pub fn append_color_line_bytes(~out: Array<i32>, color: Color)
 
 let intensity = Interval(0.0, 0.999)
 fn to_pixel(color: f64) -> i32
-  (256.0 * intensity.clamp(color)).to_i32_checked().unwrap_or(0)
+  (256.0 * intensity.clamp(color.linear_to_gamma()))
+    .to_i32_checked()
+    .unwrap_or(0)
 
 fn append_i32_ascii(~out: Array<i32>, value: i32)
   let bytes = value.to_string().to_utf8()
@@ -31,3 +33,9 @@ fn append_i32_ascii(~out: Array<i32>, value: i32)
 
 fn to_line_string(bytes: Array<i32>) -> String
   new_string(bytes.to_fixed_array())
+
+fn linear_to_gamma(linear_component: f64)
+  if linear_component > 0.0:
+    math::sqrt(linear_component)
+  else:
+    0.0

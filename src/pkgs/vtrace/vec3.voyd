@@ -1,4 +1,5 @@
 use std::math::all
+use super::render_ctx::RenderCtx
 
 pub obj Vec3 {
   x: f64,
@@ -34,6 +35,9 @@ impl Vec3
   fn '-'(self, other: Vec3) -> Vec3
     Vec3 { x: self.x - other.x, y: self.y - other.y, z: self.z - other.z }
 
+  fn '-'(self) -> Vec3
+    Vec3 { x: -self.x, y: -self.y, z: -self.z }
+
   fn '*'(self, other: Vec3) -> Vec3
     Vec3 { x: self.x * other.x, y: self.y * other.y, z: self.z * other.z }
 
@@ -67,6 +71,32 @@ impl Vec3
 
   fn copy(self) -> Vec3
     Vec3 { x: self.x, y: self.y, z: self.z }
+
+  fn random()
+    Vec3(RenderCtx::rand_f64(), RenderCtx::rand_f64(), RenderCtx::rand_f64())
+
+  fn random(range: Range<f64>)
+    Vec3(
+      RenderCtx::rand_f64(range),
+      RenderCtx::rand_f64(range),
+      RenderCtx::rand_f64(range)
+    )
+
+  fn random_unit_vector()
+    while true:
+      let p = Vec3::random(-1.0..1.0)
+      let lensq = p.len_squared()
+      if math::pow(10.0, -160.0) < lensq && lensq <= 1.0:
+        return p / math::sqrt(lensq)
+    Vec3(0.0, 0.0, 0.0)
+
+  fn random_on_hemisphere(normal: Vec3)
+    let on_unit_sphere = Vec3::random_unit_vector()
+    if on_unit_sphere.dot(normal) > 0.0:
+      on_unit_sphere
+    else:
+      -on_unit_sphere
+
 
 pub type Point3 = Vec3
 

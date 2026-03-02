@@ -1,0 +1,5 @@
+
+pub eff RenderCtx
+  /// Should return a random f64 between 0.0 and 1.0
+  rand_f64(tail) -> f64
+  rand_f64(tail, range: Range<f64>) -> f64
