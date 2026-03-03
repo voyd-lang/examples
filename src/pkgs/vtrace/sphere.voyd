@@ -2,18 +2,20 @@ use super::hit::{ HitRecord, Hittable }
 use super::vec3::{ Point3 }
 use super::ray::Ray
 use super::interval::{ Interval }
+use src::pkgs::vtrace::material::Material
 
 pub obj Sphere {
   center: Point3,
-  radius: f64
+  radius: f64,
+  mat: Material
 }
 
 impl Sphere
-  fn init(center: Point3, radius: f64)
-    Sphere { center, radius: math::max(0.0, radius) }
+  fn init(center: Point3, radius: f64, mat: Material)
+    Sphere { center, radius: math::max(0.0, radius), mat }
 
-  fn init({ center: Point3, radius: f64 })
-    Sphere { center, radius }
+  fn init({ center: Point3, radius: f64, mat: Material })
+    Sphere { center, radius, mat }
 
 impl Hittable for Sphere
   fn hit(self, { ray: Ray, ray_t: Interval, ~rec: HitRecord }) -> bool
@@ -36,6 +38,7 @@ impl Hittable for Sphere
 
     rec.t = root
     rec.p = ray.at(rec.t)
+    rec.mat = self.mat
     let outward_normal = (rec.p - self.center) / self.radius
     rec.set_face_normal(ray, outward_normal)
     true

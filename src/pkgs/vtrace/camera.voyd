@@ -101,7 +101,7 @@ impl Camera
     Ray { origin: ray_origin, direction: ray_direction }
 
 fn sample_square()
-  Vec3(RenderCtx::rand_f64(), RenderCtx::rand_f64(), 0.0)
+  Vec3(RenderCtx::rand_f64() - 0.5, RenderCtx::rand_f64() - 0.5, 0.0)
 
 fn ray_color(ray: Ray, depth: i32, world: Hittable) -> Color
   if depth <= 0:
@@ -110,8 +110,11 @@ fn ray_color(ray: Ray, depth: i32, world: Hittable) -> Color
   let ~rec = HitRecord()
 
   if world.hit({ rec, ray_t: Interval(0.001, INFINITY), ray }):
-    let direction = Vec3::random_on_hemisphere(rec.normal)
-    return 0.1 * ray_color(Ray { origin: rec.p, direction }, depth - 1, world)
+    let ~scattered = Ray::empty()
+    let ~attenuation = Vec3::empty()
+    if rec.mat.scatter({r_in: ray, rec, attenuation, scattered }):
+      return attenuation * ray_color(scattered, depth - 1, world)
+    return Vec3::empty()
 
   let unit_direction = ray.direction.unit_vector()
   let a = 0.5 * (unit_direction.y + 1.0)

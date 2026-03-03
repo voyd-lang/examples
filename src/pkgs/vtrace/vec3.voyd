@@ -11,6 +11,11 @@ impl Vec3
   fn init(x: f64, y: f64, z: f64) -> Vec3
     Vec3 { x, y, z }
 
+  fn apply(~self, vec: Vec3)
+    self.x = vec.x
+    self.y = vec.y
+    self.z = vec.z
+
   fn '+='(~self, other: Vec3) -> Vec3
     self.x = self.x + other.x
     self.y = self.y + other.y
@@ -60,11 +65,18 @@ impl Vec3
   fn dot(self, other: Vec3) -> f64
     self.x * other.x + self.y * other.y + self.z * other.z
 
+  fn empty()
+    Vec3(0.0, 0.0, 0.0)
+
   fn len(self) -> f64
     (self.x * self.x + self.y * self.y + self.z * self.z).sqrt()
 
   fn len_squared(self) -> f64
     self.x * self.x + self.y * self.y + self.z * self.z
+
+  fn near_zero(self)
+    let s = math::pow(10.0, -8.0)
+    return math::abs(self.x) < s and math::abs(self.y) < s and math::abs(self.z) < s
 
   fn unit_vector(self) -> Vec3
     self / self.len()
@@ -96,6 +108,9 @@ impl Vec3
       on_unit_sphere
     else:
       -on_unit_sphere
+
+  fn reflect(self, n: Vec3)
+    return self - n * 2.0 * self.dot(n)
 
 
 pub type Point3 = Vec3

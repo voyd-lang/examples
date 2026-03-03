@@ -1,0 +1,40 @@
+use super::ray::Ray
+use super::hit::HitRecord
+use super::color::Color
+use super::vec3::all
+
+pub trait Material
+  fn scatter(self, { r_in: Ray, rec: HitRecord, ~attenuation: Color, ~scattered: Ray }) -> bool
+
+pub obj Lambertian {
+  albedo: Color
+}
+
+impl Material for Lambertian
+  fn init(albedo?: Color)
+    Lambertian { albedo: albedo ?? Color(0.0, 0.0, 0.0) }
+
+  fn scatter(self, { r_in: Ray, rec: HitRecord, ~attenuation: Color, ~scattered: Ray }) -> bool
+    var scatter_direction = rec.normal + Vec3::random_unit_vector()
+    if scatter_direction.near_zero():
+      scatter_direction = rec.normal
+
+    scattered.apply(Ray { origin: rec.p, direction: scatter_direction })
+    attenuation.apply(self.albedo)
+    return true
+
+pub obj Metal {
+  albedo: Color,
+  fuzz: f64
+}
+
+impl Material for Metal
+  fn init(albedo?: Color, fuzz?: f64)
+    Metal { albedo: albedo ?? Color(0.0, 0.0, 0.0), fuzz: fuzz ?? 0.0 }
+
+  fn scatter(self, { r_in: Ray, rec: HitRecord, ~attenuation: Color, ~scattered: Ray }) -> bool
+    var reflected = r_in.direction.reflect(rec.normal)
+    reflected = reflected.unit_vector() + self.fuzz * Vec3::random_unit_vector()
+    scattered.apply(Ray { origin: rec.p, direction: reflected })
+    attenuation.apply(self.albedo)
+    return true

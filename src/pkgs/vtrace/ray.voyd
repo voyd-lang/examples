@@ -8,3 +8,10 @@ pub obj Ray {
 impl Ray
   fn at(self, t: f64) -> Vec3
     self.origin + self.direction * t
+
+  fn apply(~self, ray: Ray)
+    self.origin = ray.origin
+    self.direction = ray.direction
+
+  fn empty()
+    Ray { origin: Vec3::empty(), direction: Vec3::empty() }
