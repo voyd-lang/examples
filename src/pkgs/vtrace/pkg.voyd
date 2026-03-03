@@ -6,7 +6,7 @@ use std::output::Output
 use std::random::{ LocalRng, Random }
 use self::render_ctx::RenderCtx
 use self::color::Color
-use self::material::{ Lambertian, Metal }
+use self::material::{ Lambertian, Metal, Dielectric }
 
 pub fn draw(): (Output, Random) -> void
   // Image
@@ -14,13 +14,15 @@ pub fn draw(): (Output, Random) -> void
   let image_width = 400
   let material_ground = Lambertian(Color(0.8, 0.8, 0.0))
   let material_center = Lambertian(Color(0.1, 0.2, 0.5))
-  let material_left = Metal(Color(0.8, 0.8, 0.8), 0.3)
+  let material_left = Dielectric(1.5)
+  let material_bubble = Dielectric(1.0 / 1.5)
   let material_right = Metal(Color(0.8, 0.6, 0.2), 1.0)
 
   let world = HittableList()
     .added(Sphere(center: Point3(0.0, -100.5, -1.0), radius: 100.0, mat: material_ground))
     .added(Sphere(center: Point3(0.0, 0.0, -1.2), radius: 0.5, mat: material_center))
     .added(Sphere(center: Point3(-1.0, 0.0, -1.0), radius: 0.5, mat: material_left))
+    .added(Sphere(center: Point3(-1.0, 0.0, -1.0), radius: 0.4, mat: material_bubble))
     .added(Sphere(center: Point3(1.0, 0.0, -1.0), radius: 0.5, mat: material_right))
 
 

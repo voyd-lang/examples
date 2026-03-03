@@ -112,6 +112,13 @@ impl Vec3
   fn reflect(self, n: Vec3)
     return self - n * 2.0 * self.dot(n)
 
+  fn refract(self, n: Vec3, etai_over_etat: f64)
+    let cos_theta = math::min(-self.dot(n), 1.0)
+    let r_out_perp =  (self + n * cos_theta) * etai_over_etat
+    let r_out_parallel = n * -math::sqrt(math::abs(1.0 - r_out_perp.len_squared()))
+    r_out_perp + r_out_parallel
+
+
 
 pub type Point3 = Vec3
 

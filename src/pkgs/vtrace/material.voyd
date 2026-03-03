@@ -2,6 +2,7 @@ use super::ray::Ray
 use super::hit::HitRecord
 use super::color::Color
 use super::vec3::all
+use src::pkgs::vtrace::render_ctx::RenderCtx
 
 pub trait Material
   fn scatter(self, { r_in: Ray, rec: HitRecord, ~attenuation: Color, ~scattered: Ray }) -> bool
@@ -38,3 +39,32 @@ impl Material for Metal
     scattered.apply(Ray { origin: rec.p, direction: reflected })
     attenuation.apply(self.albedo)
     return true
+
+pub obj Dielectric {
+  refraction_index: f64
+}
+
+impl Material for Dielectric
+  fn init(refraction_index?: f64)
+    Dielectric { refraction_index: refraction_index ?? 0.0}
+
+  fn scatter(self, { r_in: Ray, rec: HitRecord, ~attenuation: Color, ~scattered: Ray }) -> bool
+    attenuation.apply(Vec3(1.0, 1.0, 1.0))
+    let ri = if rec.front_face
+      then: (1.0 / self.refraction_index)
+      else: self.refraction_index
+    let unit_direction = r_in.direction.unit_vector()
+    let cos_theta = math::min(-unit_direction.dot(rec.normal), 1.0)
+    let sin_theta = math::sqrt(1.0 - cos_theta * cos_theta)
+
+    let cannot_refract = ri * sin_theta > 1.0
+    let direction = if cannot_refract or self.reflectance(cos_theta) > RenderCtx::rand_f64()
+      then: unit_direction.reflect(rec.normal)
+      else: unit_direction.refract(rec.normal, ri)
+    scattered.apply(Ray { origin: rec.p, direction })
+    return true
+
+  fn reflectance(self, cosine: f64)
+    var r0 = (1.0 - self.refraction_index) / (1.0 + self.refraction_index)
+    r0 = r0 * r0
+    r0 + (1.0 - r0) * math::pow((1.0 - cosine), 5.0)
