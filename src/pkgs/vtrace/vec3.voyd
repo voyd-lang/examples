@@ -118,7 +118,17 @@ impl Vec3
     let r_out_parallel = n * -math::sqrt(math::abs(1.0 - r_out_perp.len_squared()))
     r_out_perp + r_out_parallel
 
+  fn random_in_unit_disk()
+    while true:
+      let p = Vec3(
+        RenderCtx::rand_f64(-1.0..1.0),
+        RenderCtx::rand_f64(-1.0..1.0),
+        0.0
+      )
 
+      if p.len_squared() < 1.0:
+        return p
+    return Vec3(0.0, 0.0, 0.0)
 
 pub type Point3 = Vec3
 
