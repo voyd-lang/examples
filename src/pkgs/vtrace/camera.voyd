@@ -15,35 +15,52 @@ pub obj Camera {
   image_width: i32,
   samples_per_pixel: i32,
   max_depth: i32,
+  look_from: Point3,
+  look_at: Point3,
+  vup: Vec3,
   pri center: Point3,
   pri image_height: i32,
   pri pixel_samples_scale: f64,
   pri pixel00_loc: Point3,
   pri pixel_delta_u: Vec3,
-  pri pixel_delta_v: Vec3
+  pri pixel_delta_v: Vec3,
+  pri vfov: i32,
+  pri u: Vec3,
+  pri v: Vec3,
+  pri w: Vec3
 }
 
 impl Camera
   fn init({
     aspect_ratio: f64,
     image_width: i32,
-    samples_per_pixel?: i32,
-    max_depth?: i32
+    samples_per_pixel = 10,
+    max_depth = 10,
+    vfov = 90,
+    look_from = Point3(0.0, 0.0, 0.0),
+    look_at = Point3(0.0, 0.0, -1.0),
+    vup = Vec3(0.0, 1.0, 0.0)
   })
     let image_height = (image_width.to_f64() / aspect_ratio)
       .to_i32_checked()
       .unwrap_or(0)
       .max(1)
-    let center = Point3(0.0, 0.0, 0.0)
+    let center = look_from
 
     // Determine viewport dimensions
-    let focal_length = 1.0
-    let viewport_height = 2.0
+    let focal_length = (look_from - look_at).len()
+    let theta = math::deg_to_rad(vfov.to_f64())
+    let h = math::tan(theta / 2.0)
+    let viewport_height = 2.0 * h * focal_length
     let viewport_width = viewport_height * (image_width.to_f64() / image_height.to_f64())
 
+    let w = (look_from - look_at).unit_vector()
+    let u = vup.cross(w)
+    let v = w.cross(u)
+
     // Calculate the vectors across the horizontal and down the vertical viewport edges.
-    let viewport_u = Vec3(viewport_width, 0.0, 0.0)
-    let viewport_v = Vec3(0.0, -viewport_height, 0.0)
+    let viewport_u = viewport_width * u
+    let viewport_v = viewport_height * -v
 
     // Calculate the horizontal and vertical delta vectors from pixel to pixel.
     let pixel_delta_u = viewport_u / image_width.to_f64()
@@ -51,24 +68,30 @@ impl Camera
 
     // Calculate the location of the upper left pixel.
     let viewport_upper_left = center
-      - Vec3(0.0, 0.0, focal_length)
+      - focal_length * w
       - viewport_u / 2.0
       - viewport_v / 2.0
 
     let pixel00_loc = viewport_upper_left + 0.5 * (pixel_delta_u + pixel_delta_v)
-    let spp = samples_per_pixel ?? 10
 
     Camera {
-      center,
-      samples_per_pixel: spp,
-      pixel_samples_scale: 1.0 / spp.to_f64(),
-      max_depth: max_depth ?? 10,
       aspect_ratio,
+      center,
+      samples_per_pixel,
+      pixel_samples_scale: 1.0 / samples_per_pixel.to_f64(),
+      max_depth,
       image_width,
       image_height,
       pixel00_loc,
       pixel_delta_u,
-      pixel_delta_v
+      pixel_delta_v,
+      vfov,
+      look_from,
+      look_at,
+      vup,
+      u,
+      v,
+      w
     }
 
   pub fn render(self, world: Hittable)
