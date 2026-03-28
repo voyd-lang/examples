@@ -1,0 +1,25 @@
+use src::pkgs::vtrace::hit::HittableList
+use src::pkgs::vtrace::vec3::all
+use src::pkgs::vtrace::sphere::Sphere
+use src::pkgs::vtrace::material::{ Lambertian, Metal, Dielectric }
+use std::random::{ LocalRng, Random }
+use std::number::all
+
+pub fn main(): Random -> f64
+  let ~rng = LocalRng::seeded_from_host()
+  try forward
+    let ~world = HittableList()
+    let choose_mat = rng.random_f64()
+    let center = Point3(1.0 + 0.9 * rng.random_f64(), 0.2, 2.0 + 0.9 * rng.random_f64())
+    if choose_mat < 0.8:
+      let albedo = Vec3::random() * Vec3::random()
+      let sphere_material = Lambertian(albedo)
+      world.add(Sphere(center: center, radius: 0.2, mat: sphere_material))
+    else:
+      let sphere_material = Dielectric(1.5)
+      world.add(Sphere(center: center, radius: 0.2, mat: sphere_material))
+    center.x
+  RenderCtx::rand_f64(tail):
+    tail(rng.random_f64())
+  RenderCtx::rand_f64(tail, range: Range<f64>):
+    tail(rng.random_f64(range))

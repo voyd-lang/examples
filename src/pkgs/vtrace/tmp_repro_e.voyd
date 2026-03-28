@@ -1,0 +1,14 @@
+use std::random::{ LocalRng, Random }
+
+eff RenderCtx
+  rand_f64(tail) -> f64
+
+pub fn main(): Random -> f64
+  let ~rng = LocalRng::seeded_from_host()
+  try forward
+    var sum = 0.0
+    for a in 0..200:
+      sum = sum + RenderCtx::rand_f64()
+    sum
+  RenderCtx::rand_f64(tail):
+    tail(rng.random_f64())

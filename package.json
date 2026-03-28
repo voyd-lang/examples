@@ -4,6 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
+    "build:vtrace-ts": "tsc -p tsconfig.json",
+    "benchmark:compare": "node scripts/benchmark-compare.js",
+    "benchmark:ray:compare": "node scripts/benchmark-ray-compare.js --skip python",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -11,6 +14,8 @@
   "license": "ISC",
   "type": "commonjs",
   "devDependencies": {
-    "@voyd/cli": "file:../voyd/apps/cli"
+    "@types/node": "^25.5.0",
+    "@voyd/cli": "file:../voyd/apps/cli",
+    "typescript": "^6.0.2"
   }
 }

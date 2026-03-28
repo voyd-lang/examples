@@ -1,0 +1,387 @@
+use std::array::Array
+use std::bytes::ByteBuffer
+use std::dict::Dict
+use std::number::all
+use std::result::types::all
+use std::string::{ String, StringSlice, from_utf8, Utf8Error, ParseIntError }
+
+let matrix_size_default = 8
+let matrix_rounds_default = 2
+let log_lines_default = 1
+let log_rounds_default = 1
+let top_n_default = 5
+
+obj CountEntry {
+  key: String,
+  value: i32
+}
+
+fn must_string(bytes: Array<i32>) -> String
+  match(from_utf8(bytes))
+    Ok<String> { value }:
+      value
+    Err<Utf8Error>:
+      String::init()
+
+fn append_string(~buffer: ByteBuffer, value: String) -> void
+  let bytes = value.to_utf8()
+  var index = 0
+  while index < bytes.len() do:
+    buffer.push(bytes.at(index))
+    index = index + 1
+
+fn append_string(~buffer: ByteBuffer, value: StringSlice) -> void
+  append_string(buffer, value.to_string())
+
+fn build_matrix(size: i32, multiplier_a: i32, multiplier_b: i32) -> Array<i32>
+  let ~values = Array<i32>::with_capacity(size * size)
+  var row = 0
+  while row < size do:
+    var col = 0
+    while col < size do:
+      values.push(((row * multiplier_a + col * multiplier_b + 7) % 17) + 1)
+      col = col + 1
+    row = row + 1
+  values
+
+fn run_compute_benchmark(
+  left: Array<i32>,
+  right: Array<i32>,
+  ~scratch: Array<i32>,
+  size: i32,
+  rounds: i32
+) -> String
+  var checksum = 0
+  let total = size * size
+  var round = 0
+  while round < rounds do:
+    var index = 0
+    while index < total do:
+      scratch[index] = 0
+      index = index + 1
+
+    var row = 0
+    while row < size do:
+      let row_base = row * size
+      var inner = 0
+      while inner < size do:
+        let left_value = left.at(row_base + inner) + round
+        let right_base = inner * size
+        var col = 0
+        while col < size do:
+          let scratch_index = row_base + col
+          scratch[scratch_index] = scratch.at(scratch_index) + left_value * right.at(right_base + col)
+          col = col + 1
+        inner = inner + 1
+      row = row + 1
+
+    index = 0
+    while index < total do:
+      checksum = checksum + scratch.at(index) * ((index % 13) + 1)
+      index = index + 37
+    round = round + 1
+
+  checksum.to_string()
+
+fn region_for(index: i32) -> StringSlice
+  if index % 4 == 0:
+    "us-east".as_slice()
+  else:
+    if index % 4 == 1:
+      "us-west".as_slice()
+    else:
+      if index % 4 == 2:
+        "eu-central".as_slice()
+      else:
+        "ap-south".as_slice()
+
+fn service_for(index: i32) -> StringSlice
+  let value = (index * 7) % 6
+  if value == 0:
+    "auth".as_slice()
+  else:
+    if value == 1:
+      "orders".as_slice()
+    else:
+      if value == 2:
+        "catalog".as_slice()
+      else:
+        if value == 3:
+          "search".as_slice()
+        else:
+          if value == 4:
+            "billing".as_slice()
+          else:
+            "media".as_slice()
+
+fn method_for(index: i32) -> StringSlice
+  if index % 4 == 0:
+    "GET".as_slice()
+  else:
+    if index % 4 == 1:
+      "POST".as_slice()
+    else:
+      if index % 4 == 2:
+        "PUT".as_slice()
+      else:
+        "DELETE".as_slice()
+
+fn cache_for(index: i32) -> StringSlice
+  if index % 2 == 0:
+    "hit".as_slice()
+  else:
+    "miss".as_slice()
+
+fn build_path(index: i32) -> String
+  if index % 6 == 0:
+    return "/api/orders/".as_slice().to_string().concat((index % 307).to_string())
+  if index % 6 == 1:
+    return "/api/orders/"
+      .as_slice()
+      .to_string()
+      .concat((index % 307).to_string())
+      .concat("/items/".as_slice())
+      .concat(((index * 7) % 29).to_string())
+  if index % 6 == 2:
+    return "/api/users/".as_slice().to_string().concat(((index * 13) % 251).to_string())
+  if index % 6 == 3:
+    return "/api/catalog/".as_slice().to_string().concat(((index * 17) % 97).to_string())
+  if index % 6 == 4:
+    return "/health".as_slice().to_string()
+  "/static/app."
+    .as_slice()
+    .to_string()
+    .concat((index % 9).to_string())
+    .concat(".js".as_slice())
+
+fn build_log_payload(line_count: i32) -> String
+  let ~buffer = ByteBuffer::with_capacity(line_count * 72)
+  var index = 0
+  while index < line_count do:
+    if index > 0:
+      buffer.push(10)
+
+    let code_roll = (index * 17 + 11) % 20
+    let status =
+      if code_roll == 0:
+        503
+      else:
+        if code_roll <= 2:
+          429
+        else:
+          if code_roll <= 4:
+            404
+          else:
+            if index % 9 == 0:
+              201
+            else:
+              200
+
+    append_string(buffer, method_for(index))
+    buffer.push(124)
+    append_string(buffer, build_path(index))
+    buffer.push(124)
+    append_string(buffer, "tenant=tenant-".as_slice())
+    append_string(buffer, (index % 37).to_string())
+    append_string(buffer, "&region=".as_slice())
+    append_string(buffer, region_for(index))
+    append_string(buffer, "&status=".as_slice())
+    append_string(buffer, status.to_string())
+    append_string(buffer, "&latency=".as_slice())
+    append_string(buffer, (15 + ((index * index * 7 + 19) % 900)).to_string())
+    append_string(buffer, "&bytes=".as_slice())
+    append_string(buffer, (200 + ((index * 31 + 17) % 5000)).to_string())
+    buffer.push(124)
+    append_string(buffer, "host=api.example.test".as_slice())
+    buffer.push(124)
+    append_string(buffer, "ua=bench/".as_slice())
+    append_string(buffer, ((index % 5) + 1).to_string())
+    append_string(buffer, ".0".as_slice())
+
+    index = index + 1
+
+  must_string(buffer.as_bytes().to_array())
+
+fn is_digits(value: String) -> bool
+  let bytes = value.to_utf8()
+  if bytes.len() == 0:
+    return false
+  var index = 0
+  while index < bytes.len() do:
+    let byte = bytes.at(index)
+    if byte < 48 or byte > 57:
+      return false
+    index = index + 1
+  true
+
+fn normalize_path(path: String) -> String
+  let parts = path.split(on: "/")
+  let ~buffer = ByteBuffer::with_capacity(path.to_utf8().len() + 8)
+  var index = 0
+  while index < parts.len() do:
+    if index > 0:
+      buffer.push(47)
+    let part = parts.at(index).to_string()
+    if is_digits(part):
+      append_string(buffer, ":id".as_slice())
+    else:
+      append_string(buffer, part)
+    index = index + 1
+  must_string(buffer.as_bytes().to_array())
+
+fn increment_count(~target: Dict<String, i32>, key: String, amount: i32) -> void
+  match(target.get(key))
+    Some<i32> { value }:
+      target.set(key, value + amount)
+    None:
+      target.set(key, amount)
+
+fn compare_strings(left: String, right: String) -> i32
+  if left.equals(right):
+    return 0
+  let left_bytes = left.to_utf8()
+  let right_bytes = right.to_utf8()
+  let shared_len =
+    if left_bytes.len() < right_bytes.len():
+      left_bytes.len()
+    else:
+      right_bytes.len()
+  var index = 0
+  while index < shared_len do:
+    let left_byte = left_bytes.at(index)
+    let right_byte = right_bytes.at(index)
+    if left_byte < right_byte:
+      return -1
+    if left_byte > right_byte:
+      return 1
+    index = index + 1
+  if left_bytes.len() < right_bytes.len():
+    -1
+  else:
+    1
+
+fn hash_string(value: String) -> i32
+  let bytes = value.to_utf8()
+  var index = 0
+  var hash = 0
+  while index < bytes.len() do:
+    hash = hash * 31 + bytes.at(index)
+    index = index + 1
+  hash
+
+fn method_code(method: String) -> i32
+  if method.equals("GET"):
+    1
+  else:
+    if method.equals("POST"):
+      2
+    else:
+      if method.equals("PUT"):
+        3
+      else:
+        4
+
+fn region_code(region: String) -> i32
+  if region.equals("us-east"):
+    1
+  else:
+    if region.equals("us-west"):
+      2
+    else:
+      if region.equals("eu-central"):
+        3
+      else:
+        4
+
+fn param_value(value: String) -> String
+  match(value.split(on: "=", max_splits: 1).get(1))
+    Some<StringSlice> { value: part }:
+      part.to_string()
+    None:
+      String::init()
+
+fn format_top_entries(target: Dict<String, i32>, limit: i32) -> String
+  let ~entries = Array<CountEntry>::with_capacity(target.len())
+  target.each((key: String, value: i32) -> void =>
+    entries.push(CountEntry { key, value })
+    void
+  )
+  entries.sort((left: CountEntry, right: CountEntry) -> i32 =>
+    if left.value > right.value:
+      -1
+    else:
+      if left.value < right.value:
+        1
+      else:
+        compare_strings(left.key, right.key)
+  )
+
+  let ~buffer = ByteBuffer::with_capacity(entries.len() * 24)
+  var index = 0
+  let max_items = if limit < entries.len() then: limit else: entries.len()
+  while index < max_items do:
+    if index > 0:
+      buffer.push(44)
+    let entry = entries.at(index)
+    append_string(buffer, entry.key)
+    buffer.push(58)
+    append_string(buffer, entry.value.to_string())
+    index = index + 1
+  must_string(buffer.as_bytes().to_array())
+
+fn parse_i32(value: String) -> i32
+  match(value.parse_int())
+    Ok<i32> { value: parsed }:
+      parsed
+    Err<ParseIntError>:
+      0
+
+fn run_log_benchmark(payload: String, rounds: i32, top_n: i32) -> String
+  var checksum = 0
+
+  var round = 0
+  while round < rounds do:
+    let lines = payload.split(on: "\n", keep_empty: false)
+    var line_index = 0
+    while line_index < lines.len() do:
+      let fields = lines.at(line_index).to_string().split(on: "|")
+      let method = fields.at(0).to_string()
+      let path = normalize_path(fields.at(1).to_string())
+      let params = fields.at(2).to_string().split(on: "&")
+      let region = param_value(params.at(1).to_string())
+      let status = parse_i32(param_value(params.at(2).to_string()))
+      let latency = parse_i32(param_value(params.at(3).to_string()))
+      let byte_count = parse_i32(param_value(params.at(4).to_string()))
+
+      checksum =
+        checksum +
+        method_code(method) * 3 +
+        path.to_utf8().len() * 5 +
+        region_code(region) * 7 +
+        status +
+        latency +
+        byte_count +
+        fields.at(3).to_string().to_utf8().len() +
+        fields.at(4).to_string().to_utf8().len() +
+        top_n
+      line_index = line_index + 1
+    round = round + 1
+
+  checksum.to_string()
+
+pub fn compute() -> i32
+  let left = build_matrix(matrix_size_default, 17, 31)
+  let right = build_matrix(matrix_size_default, 29, 19)
+  let ~scratch = Array<i32>::with_capacity(matrix_size_default * matrix_size_default)
+  var index = 0
+  while index < matrix_size_default * matrix_size_default do:
+    scratch.push(0)
+    index = index + 1
+  parse_i32(run_compute_benchmark(left, right, scratch, matrix_size_default, matrix_rounds_default))
+
+pub fn log() -> i32
+  let payload = build_log_payload(log_lines_default)
+  hash_string(run_log_benchmark(payload, log_rounds_default, top_n_default))
+
+pub fn main() -> i32
+  compute()

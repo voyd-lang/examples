@@ -1,15 +1,14 @@
-use self::hit::HittableList
-use self::vec3::all
-use self::sphere::Sphere
-use self::camera::Camera
-use std::output::Output
+use super::hit::HittableList
+use super::vec3::all
+use super::sphere::Sphere
+use super::material::{ Lambertian, Metal, Dielectric }
+use super::render_ctx::RenderCtx
 use std::random::{ LocalRng, Random }
-use self::render_ctx::RenderCtx
-use self::color::Color
-use self::material::{ Lambertian, Metal, Dielectric }
 use std::number::all
 
-pub fn draw(): (Output, Random) -> void
+type Color = Vec3
+
+pub fn main(): Random -> f64
   let ~rng = LocalRng::seeded_from_host()
   try forward
     let ~world = HittableList()
@@ -24,7 +23,6 @@ pub fn draw(): (Output, Random) -> void
         if (center - Point3(4.0, 0.2, 0.0)).len() > 0.9:
           if
             choose_mat < 0.8:
-              // diffuse
               let albedo = Vec3::random() * Vec3::random()
               let sphere_material = Lambertian(albedo)
               world.add(Sphere(center: center, radius: 0.2, mat: sphere_material))
@@ -34,7 +32,6 @@ pub fn draw(): (Output, Random) -> void
               let sphere_material = Metal(albedo, fuzz)
               world.add(Sphere(center: center, radius: 0.2, mat: sphere_material))
             else:
-              // glass
               let sphere_material = Dielectric(1.5)
               world.add(Sphere(center: center, radius: 0.2, mat: sphere_material))
 
@@ -47,19 +44,7 @@ pub fn draw(): (Output, Random) -> void
     let material3 = Metal(Color(0.7, 0.6, 0.5), 0.0)
     world.add(Sphere(Point3(4.0, 1.0, 0.0), 1.0, material3))
 
-    Camera({
-      aspect_ratio: 16.0 / 9.0,
-      image_width: 200,
-      samples_per_pixel: 10,
-      max_depth: 50,
-      look_from: Point3(13.0, 2.0, 3.0),
-      look_at: Point3(0.0, 0.0, 0.0),
-      vup: Vec3(0.0, 1.0, 0.0),
-      vfov: 20,
-      defocus_angle: 0.6,
-      focus_dist: 10.0
-    })
-      .render(world)
+    1.0
   RenderCtx::rand_f64(tail):
     tail(rng.random_f64())
   RenderCtx::rand_f64(tail, range: Range<f64>):
