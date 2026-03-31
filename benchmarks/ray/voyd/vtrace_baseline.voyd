@@ -10,7 +10,7 @@ let dielectric_kind = 2
 let near_zero_epsilon = 0.00000001
 let min_unit_vector_lensq = math::pow(10.0, -160.0)
 let ray_t_min = 0.001
-pub value Vec3 {
+pub val Vec3 {
   x: f64,
   y: f64,
   z: f64
@@ -122,7 +122,7 @@ let sky_blue = Color(0.5, 0.7, 1.0)
 pub fn '*'(scalar: f64, vec: Vec3) -> Vec3
   vec * scalar
 
-pub value Ray {
+pub val Ray {
   origin: Vec3,
   direction: Vec3
 }
@@ -138,7 +138,7 @@ impl Ray
   fn empty()
     Ray { origin: Vec3::empty(), direction: Vec3::empty() }
 
-pub value HitRecord {
+pub val HitRecord {
   p: Point3,
   normal: Vec3,
   albedo: Color,
@@ -178,7 +178,7 @@ impl HitRecord
     self.normal =
       if self.front_face then: outward_normal else: outward_normal * -1.0
 
-pub value Sphere {
+pub val Sphere {
   center: Point3,
   radius: f64,
   albedo: Color,
