@@ -1,7 +1,7 @@
 use std::bytes::ByteBuffer
 use std::math::{ INFINITY }
 use std::number::all
-use std::output::{ Output, write_bytes, write_line }
+use std::output::{ Output, write, write_line }
 use std::random::{ LocalRng, Random }
 
 let lambertian_kind = 0
@@ -12,7 +12,7 @@ let min_unit_vector_lensq = math::pow(10.0, -160.0)
 let ray_t_min = 0.001
 let avoid_center_distance_sq = 0.81
 
-pub value Vec3 {
+pub val Vec3 {
   x: f64,
   y: f64,
   z: f64
@@ -81,16 +81,16 @@ impl Vec3
   fn random(~rng: LocalRng)
     Vec3(rng.random_f64(), rng.random_f64(), rng.random_f64())
 
-  fn random(~rng: LocalRng, min: f64, max: f64)
+  fn random(~rng: LocalRng, range: Range<f64>)
     Vec3(
-      random_f64_between(rng, min, max),
-      random_f64_between(rng, min, max),
-      random_f64_between(rng, min, max)
+      rng.random_f64(range),
+      rng.random_f64(range),
+      rng.random_f64(range)
     )
 
   fn random_unit_vector(~rng: LocalRng)
     while true:
-      let p = Vec3::random(rng, -1.0, 1.0)
+      let p = Vec3::random(rng, -1.0..1.0)
       let lensq = p.len_squared()
       if min_unit_vector_lensq < lensq and lensq <= 1.0:
         return p / math::sqrt(lensq)
@@ -108,8 +108,8 @@ impl Vec3
   fn random_in_unit_disk(~rng: LocalRng)
     while true:
       let p = Vec3(
-        random_f64_between(rng, -1.0, 1.0),
-        random_f64_between(rng, -1.0, 1.0),
+        rng.random_f64(-1.0..1.0),
+        rng.random_f64(-1.0..1.0),
         0.0
       )
       if p.len_squared() < 1.0:
@@ -124,7 +124,7 @@ let sky_blue = Color(0.5, 0.7, 1.0)
 pub fn '*'(scalar: f64, vec: Vec3) -> Vec3
   vec * scalar
 
-pub value Ray {
+pub val Ray {
   origin: Vec3,
   direction: Vec3
 }
@@ -140,7 +140,7 @@ impl Ray
   fn empty()
     Ray { origin: Vec3::empty(), direction: Vec3::empty() }
 
-pub value HitRecord {
+pub val HitRecord {
   p: Point3,
   normal: Vec3,
   albedo: Color,
@@ -180,7 +180,7 @@ impl HitRecord
     self.normal =
       if self.front_face then: outward_normal else: outward_normal * -1.0
 
-pub value Sphere {
+pub val Sphere {
   center: Point3,
   radius: f64,
   albedo: Color,
@@ -349,7 +349,7 @@ impl Camera
 
         append_color_line_bytes(scanline, color * self.pixel_samples_scale)
 
-      write_bytes(scanline.as_bytes())
+      write(scanline.as_bytes())
 
     void
 
@@ -367,9 +367,6 @@ impl Camera
 
 fn sample_square(~rng: LocalRng)
   Vec3(rng.random_f64() - 0.5, rng.random_f64() - 0.5, 0.0)
-
-fn random_f64_between(~rng: LocalRng, min: f64, max: f64) -> f64
-  min + rng.random_f64() * (max - min)
 
 fn ray_color(ray: Ray, { depth: i32, world: Array<Sphere>, ~rng: LocalRng }) -> Color
   let ~current_ray = ray
@@ -506,8 +503,8 @@ pub fn main(): (Output, Random) -> void
             let albedo = Vec3::random(rng) * Vec3::random(rng)
             world.push(Sphere::lambertian(center, 0.2, albedo))
           choose_mat < 0.95:
-            let albedo = Vec3::random(rng, 0.5, 1.0)
-            let fuzz = random_f64_between(rng, 0.0, 0.5)
+            let albedo = Vec3::random(rng, 0.5..1.0)
+            let fuzz = rng.random_f64(0.0..0.5)
             world.push(Sphere::metal(center, 0.2, albedo, fuzz))
           else:
             world.push(Sphere::dielectric(center, 0.2, 1.5))

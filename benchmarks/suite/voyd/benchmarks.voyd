@@ -26,7 +26,7 @@ fn must_string(bytes: Array<i32>) -> String
 fn append_string(~buffer: ByteBuffer, value: String) -> void
   let bytes = value.to_utf8()
   var index = 0
-  while index < bytes.len() do:
+  while index < bytes.len():
     buffer.push(bytes.at(index))
     index = index + 1
 
@@ -36,9 +36,9 @@ fn append_string(~buffer: ByteBuffer, value: StringSlice) -> void
 fn build_matrix(size: i32, multiplier_a: i32, multiplier_b: i32) -> Array<i32>
   let ~values = Array<i32>::with_capacity(size * size)
   var row = 0
-  while row < size do:
+  while row < size:
     var col = 0
-    while col < size do:
+    while col < size:
       values.push(((row * multiplier_a + col * multiplier_b + 7) % 17) + 1)
       col = col + 1
     row = row + 1
@@ -54,21 +54,21 @@ fn run_compute_benchmark(
   var checksum = 0
   let total = size * size
   var round = 0
-  while round < rounds do:
+  while round < rounds:
     var index = 0
-    while index < total do:
+    while index < total:
       scratch[index] = 0
       index = index + 1
 
     var row = 0
-    while row < size do:
+    while row < size:
       let row_base = row * size
       var inner = 0
-      while inner < size do:
+      while inner < size:
         let left_value = left.at(row_base + inner) + round
         let right_base = inner * size
         var col = 0
-        while col < size do:
+        while col < size:
           let scratch_index = row_base + col
           scratch[scratch_index] = scratch.at(scratch_index) + left_value * right.at(right_base + col)
           col = col + 1
@@ -76,7 +76,7 @@ fn run_compute_benchmark(
       row = row + 1
 
     index = 0
-    while index < total do:
+    while index < total:
       checksum = checksum + scratch.at(index) * ((index % 13) + 1)
       index = index + 37
     round = round + 1
@@ -157,7 +157,7 @@ fn build_path(index: i32) -> String
 fn build_log_payload(line_count: i32) -> String
   let ~buffer = ByteBuffer::with_capacity(line_count * 72)
   var index = 0
-  while index < line_count do:
+  while index < line_count:
     if index > 0:
       buffer.push(10)
 
@@ -207,7 +207,7 @@ fn is_digits(value: String) -> bool
   if bytes.len() == 0:
     return false
   var index = 0
-  while index < bytes.len() do:
+  while index < bytes.len():
     let byte = bytes.at(index)
     if byte < 48 or byte > 57:
       return false
@@ -218,7 +218,7 @@ fn normalize_path(path: String) -> String
   let parts = path.split(on: "/")
   let ~buffer = ByteBuffer::with_capacity(path.to_utf8().len() + 8)
   var index = 0
-  while index < parts.len() do:
+  while index < parts.len():
     if index > 0:
       buffer.push(47)
     let part = parts.at(index).to_string()
@@ -247,7 +247,7 @@ fn compare_strings(left: String, right: String) -> i32
     else:
       right_bytes.len()
   var index = 0
-  while index < shared_len do:
+  while index < shared_len:
     let left_byte = left_bytes.at(index)
     let right_byte = right_bytes.at(index)
     if left_byte < right_byte:
@@ -264,7 +264,7 @@ fn hash_string(value: String) -> i32
   let bytes = value.to_utf8()
   var index = 0
   var hash = 0
-  while index < bytes.len() do:
+  while index < bytes.len():
     hash = hash * 31 + bytes.at(index)
     index = index + 1
   hash
@@ -319,7 +319,7 @@ fn format_top_entries(target: Dict<String, i32>, limit: i32) -> String
   let ~buffer = ByteBuffer::with_capacity(entries.len() * 24)
   var index = 0
   let max_items = if limit < entries.len() then: limit else: entries.len()
-  while index < max_items do:
+  while index < max_items:
     if index > 0:
       buffer.push(44)
     let entry = entries.at(index)
@@ -340,10 +340,10 @@ fn run_log_benchmark(payload: String, rounds: i32, top_n: i32) -> String
   var checksum = 0
 
   var round = 0
-  while round < rounds do:
+  while round < rounds:
     let lines = payload.split(on: "\n", keep_empty: false)
     var line_index = 0
-    while line_index < lines.len() do:
+    while line_index < lines.len():
       let fields = lines.at(line_index).to_string().split(on: "|")
       let method = fields.at(0).to_string()
       let path = normalize_path(fields.at(1).to_string())
@@ -374,7 +374,7 @@ pub fn compute() -> i32
   let right = build_matrix(matrix_size_default, 29, 19)
   let ~scratch = Array<i32>::with_capacity(matrix_size_default * matrix_size_default)
   var index = 0
-  while index < matrix_size_default * matrix_size_default do:
+  while index < matrix_size_default * matrix_size_default:
     scratch.push(0)
     index = index + 1
   parse_i32(run_compute_benchmark(left, right, scratch, matrix_size_default, matrix_rounds_default))
